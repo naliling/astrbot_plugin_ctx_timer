@@ -6,7 +6,7 @@
 窗口内自动把内容注入 LLM 上下文，窗口外自动撤下。
 
 作者: 娜莉灵
-版本: 1.0.1.3
+版本: 1.0.1.4
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
     get_astrbot_data_path = None  # type: ignore
 
 PLUGIN_NAME = "astrbot_plugin_ctx_timer"
-VERSION = "1.0.1.3"
+VERSION = "1.0.1.4"
 AUTHOR = "娜莉灵"
 
 DEFAULT_TZ = "UTC+3"
@@ -593,12 +593,14 @@ class CtxTimerPlugin(Star):
     @_admin_only()
     async def cmd_ctx(self, event: AstrMessageEvent):
         """上下文定时注入：帮助"""
+        logger.info(f"[ctx_timer] 收到指令：{event.message_str!r}")
         yield event.plain_result(await self._dispatch(event))
 
     @filter.command("上下文")
     @_admin_only()
     async def cmd_ctx_cn(self, event: AstrMessageEvent):
         """上下文定时注入：帮助（中文指令）"""
+        logger.info(f"[ctx_timer] 收到指令：{event.message_str!r}")
         yield event.plain_result(await self._dispatch(event))
 
     @filter.event_message_type(filter.EventMessageType.ALL)
@@ -629,8 +631,12 @@ class CtxTimerPlugin(Star):
             return
         if not self._is_admin(event):
             return
+        logger.info(f"[ctx_timer] 裸指令命中：{text!r}")
+        reply = await self._dispatch(event, text=text)
+        # 先 yield 让回复进入后面的发送阶段，再停止事件；
+        # 反过来会连这一轮的回复一起被丢掉。
+        yield event.plain_result(reply)
         event.stop_event()
-        yield event.plain_result(await self._dispatch(event, text=text))
 
     # -- 分步向导监听 ------------------------------------------------------ #
     @filter.event_message_type(filter.EventMessageType.ALL)
@@ -648,9 +654,10 @@ class CtxTimerPlugin(Star):
             self._wizard.pop(uid, None)
             yield event.plain_result("向导已超时（3 分钟），请重新发送 /ctx add")
             return
-        event.stop_event()
         st["ts"] = datetime.now().timestamp()
-        yield event.plain_result(self._wizard_step(uid, st, text))
+        reply = self._wizard_step(uid, st, text)
+        yield event.plain_result(reply)
+        event.stop_event()
 
     def _wizard_step(self, uid: str, st: dict, text: str) -> str:
         step = st.get("step")
@@ -1455,7 +1462,7 @@ class CtxTimerPlugin(Star):
                 pass
 
 
-HELP_TEXT = """CTEX伴侣 v1.0.1.3
+HELP_TEXT = """CTEX伴侣 v1.0.1.4
 
 给 bot 设定「什么时候、注入什么上下文」。
 到点自动生效，过点自动撤下，多 Bot 各自独立。
