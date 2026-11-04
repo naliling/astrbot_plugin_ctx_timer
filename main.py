@@ -6,7 +6,7 @@
 窗口内自动把内容注入 LLM 上下文，窗口外自动撤下。
 
 作者: 娜莉灵
-版本: 1.0.1.5
+版本: 1.0.1.6
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
     get_astrbot_data_path = None  # type: ignore
 
 PLUGIN_NAME = "astrbot_plugin_ctx_timer"
-VERSION = "1.0.1.5"
+VERSION = "1.0.1.6"
 AUTHOR = "娜莉灵"
 
 DEFAULT_TZ = "UTC+3"
@@ -1473,55 +1473,31 @@ class CtxTimerPlugin(Star):
                 pass
 
 
-HELP_TEXT = """CTEX伴侣 v1.0.1.5
+HELP_TEXT = """CTEX伴侣 v1.0.1.6 · 到点自动注入上下文，过点自动撤下
 
-给 bot 设定「什么时候、注入什么上下文」。
-到点自动生效，过点自动撤下，多 Bot 各自独立。
+【咋用】
+  ctx add 早班 09:00 18:00 现在是工作时间，回复要正式
+  ctx add                      跟着向导填（名字 → 时间 → 内容）
+  ctx kk                       看规则列表
+  ctx hal                      看现在生效什么
 
-用法：/ctx 开头，或者不 @ 机器人直接发 ctx / 上下文。
+【时间】
+  每天 09:00 18:00             也支持跨天 22:00 06:00
+  一次 2026-11-05 09:00 2026-11-05 18:00
+  相对 now+30m
 
-【创建】
-/ctx add                     分步向导（推荐）
-/ctx add 早班 09:00 18:00 现在是工作时段，回复要正式
-/ctx add 活动 2026-11-05 09:00 2026-11-11 23:59 双十一期间全场八折
-/ctx add 夜班 01:00 05:00 现在是凌晨，你是夜班人格，语气温柔 -tz UTC+8
-
-时间写法：
-· 每日循环 → 09:00 18:00（支持跨天 22:00 06:00）
-· 一次性   → 2026-11-05 09:00 2026-11-11 23:59
-· 相对     → now+30m now+2h
-
-时区写法（不加 -tz 就跟随全局，默认 UTC+3）：
-· -tz UTC+8 / UTC+2 / UTC+3 / UTC+6 / UTC-3
-· 也支持 UTC+5:30 这类半小时时区
-
-【查看】
-/ctx list [-a]       列表（简写 /ctx kk，-a 含已结束）
-/ctx show 1          详情
-/ctx status          当前生效情况（简写 /ctx hal）
-/ctx bots            所有 Bot 的规则数
-/ctx tz              查看各规则时区
-
-【管理】
-/ctx on|off 1        启用/停用
-/ctx edit 1 内容 新的内容
-/ctx del 1           删除
-/ctx mode 1 system|context   注入位置
-/ctx scope 1 g:123456        限定群聊
-/ctx tz 1 UTC+8              改时区（默认=跟随全局）
-/ctx notify 1 on             到点提醒
-/ctx test 1          预览注入效果
+【改】
+  ctx on 1 / ctx off 1         启用 / 停用
+  ctx edit 1 内容 新内容        改内容
+  ctx del 1                    删除
+  ctx mode 1 system            改成系统提示词（默认上下文注入，更省钱）
+  ctx tz 1 UTC+8               这条规则单独用时区（默认跟全局 UTC+3）
 
 【其它】
-/ctx export          导出规则
-/ctx import {...}    导入规则
-/ctx cancel          取消向导
+  ctx show 1 详情 · ctx test 1 预览 · ctx tz 看时区 · ctx bots 看各 Bot 规则数
+  前缀都认：/ctx、.ctx、或者不加前缀直接发 ctx
 
-跨 Bot 管理：任意指令后加 -b <Bot名>，例如 /ctx list -b aiocqhttp
-
-最有用的一种用法：把「硬要求」做成关键提示。
-   例：凌晨 1-5 点必须变成另一个角色，就在这个窗口强制注入人格提示，
-   模型不会跑偏到第二人格，5 点后自动还原。"""
+最有用：把硬要求做成关键提示（比如凌晨 1-5 点必须换人格），模型就不会跑偏。"""
 
 
 __all__ = ["CtxTimerPlugin", "RuleStore", "parse_window", "rule_active", "rule_state"]

@@ -2,10 +2,10 @@
 
 > 给 bot 一个「时间表」：**到点自动注入上下文，过点自动撤下。**
 
-作者：**娜莉灵**　|　版本：**1.0.1.5**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
+作者：**娜莉灵**　|　版本：**1.0.1.6**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
 
 [![GitHub](https://img.shields.io/badge/GitHub-naliling%2Fastrbot__plugin__ctx__timer-181717?logo=github)](https://github.com/naliling/astrbot_plugin_ctx_timer)
-[![Version](https://img.shields.io/badge/version-1.0.1.5-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.1.6-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/LICENSE)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A54.5.7-ff6b6b)](https://astrbot.app)
 
@@ -13,44 +13,53 @@
 
 ---
 
+## 咋设置
+
+### 1. 装进去
+
+**插件市场（推荐）**：WebUI → 插件 → 插件市场 → 搜「CTEX伴侣」→ 安装 → 重载。
+
+**手动**：把整个 `astrbot_plugin_ctx_timer` 文件夹放进 `AstrBot/data/plugins/`，然后在插件页点「重载插件」。
+
+零第三方依赖，装完即用。需要 AstrBot ≥ 4.5.7。
+
+### 2. 这个 Bot 要勾上本插件
+
+AstrBot 的插件开关是**每个 Bot 分开的**。如果你的 Bot 是逐条勾选插件（不是「全部启用」），一定要在 WebUI → 插件管理里把「CTEX伴侣」勾上。
+
+没勾的话，指令会被静默过滤掉，日志里也不报错，表现就是「发了完全没反应」。
+
+### 3. 记住这个 Bot 的前缀
+
+有的 Bot 唤醒前缀是 `/`，有的是 `.`。前缀不对时 `/ctx` 会被当成普通聊天。
+
+最省事的用法：**不加前缀、不 @ 机器人，直接发 `ctx kk`**，两种 Bot 都认。
+
+### 4. 时区
+
+插件配置页的「默认时区」默认 `UTC+3`（莫斯科），可以填 `UTC+8`、`Asia/Shanghai`，填 `auto` 就跟随服务器。
+
+单条规则可以用 `-tz` 单独指定，不影响别的规则。
+
+---
+
 ## 咋用
 
-### 1. 安装
-
-**方式一：插件市场（推荐）**
-AstrBot WebUI → 插件 → 插件市场 → 搜索「CTEX伴侣」→ 安装 → 重载。
-
-**方式二：手动**
-把整个 `astrbot_plugin_ctx_timer` 文件夹放进 `AstrBot/data/plugins/`，然后在 WebUI 插件页点「重载插件」。
-
-**方式三：从 GitHub 拉取**
-
-```bash
-cd AstrBot/data/plugins
-git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
-```
-
-以后更新只要在该目录 `git pull`，再在 WebUI 点一次「重载插件」即可（规则数据存在 `data/plugin_data/` 里，不会丢）。
-
-> 本插件零第三方依赖，装完即用。需要 AstrBot ≥ 4.5.7。
-
-### 2. 三步上手
+### 1. 三步上手
 
 ```
-第一步  发 /ctx add             → 跟着向导填：名字 → 时间 → 内容
-第二步  发 /ctx kk            → 看到规则，状态显示「生效中」
-第三步  随便问 bot 一句话       → 内容已经悄悄进上下文了
+第一步  ctx add            → 跟着向导填：名字 → 时间 → 内容
+第二步  ctx kk             → 看到规则，状态显示「生效中」
+第三步  随便问 bot 一句话  → 内容已经进上下文了
 ```
 
-不想打 `/` 也行：**不 @ 机器人、直接发 `ctx kk` 或 `上下文 kk` 也能用**（群里 @ 了别人也不影响）。
-
-想一行搞定也行：
+一行搞定也行：
 
 ```
-/ctx add 早班人设 09:00 18:00 现在是工作时段，回复要正式、简洁，不要用表情包。
+ctx add 早班人设 09:00 18:00 现在是工作时段，回复要正式、简洁，不要用表情包。
 ```
 
-### 3. 时间怎么写
+### 2. 时间怎么写
 
 | 想表达 | 就这么写 | 说明 |
 |---|---|---|
@@ -60,9 +69,9 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 | 只写日期 | `2026-11-05 2026-11-11` | 自动取 00:00 ~ 23:59 |
 | 从现在开始 30 分钟 | `now+30m now+2h` | 支持 m / h / d |
 
-### 4. 时区怎么写
+### 3. 时区怎么写
 
-默认跟随插件配置的时区（默认 `UTC+3`，莫斯科时间；配置页可改，填 `auto` 就跟随服务器）。**需要别的时区，不用自己换算，直接标出来就行**：
+**需要别的时区，不用自己换算，直接标出来就行**：
 
 | 地区 | 写法 |
 |---|---|
@@ -73,32 +82,30 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 | 西三区（圣保罗/布宜诺斯艾利斯） | `UTC-3` |
 | 印度（半小时时区） | `UTC+5:30` |
 
-两种用法：
+三种用法：
 
 ```
 # ① 建规则时直接标
-/ctx add 早班 09:00 18:00 现在是工作时段 -tz UTC+8
+ctx add 早班 09:00 18:00 现在是工作时段 -tz UTC+8
 
 # ② 建完之后改
-/ctx tz 1 UTC+2
+ctx tz 1 UTC+2
 
 # ③ 改回跟随全局
-/ctx tz 1 默认
+ctx tz 1 默认
 ```
 
-> **时间是按规则自己的时区解释的。** 写 `09:00 18:00 -tz UTC+2`，就是「UTC+2 的 9 点到 18 点」，插件自动帮你对齐，不用算时差。
+> **时间是按规则自己的时区解释的。** 写 `09:00 18:00 -tz UTC+2`，就是「UTC+2 的 9 点到 18 点」，不用算时差。
 
-### 5. 常用操作
+### 4. 常用操作
 
 ```
-/ctx list          看看现在有哪些规则、哪条正在生效
-/ctx status        当前时间、当前 Bot、正在注入哪几条、下一条几点生效
-/ctx off 1         临时停用第 1 条（规则还在，不删）
-/ctx del 1         彻底删除
-/ctx test 1        预览这条规则会往上下文里塞什么
+ctx kk             看有哪些规则、哪条正在生效
+ctx hal            当前时间、当前 Bot、正在注入哪几条、下一条几点生效
+ctx off 1          临时停用第 1 条（规则还在）
+ctx del 1          彻底删除
+ctx test 1         预览这条规则会往上下文里塞什么
 ```
-
----
 
 ## 有啥用
 
@@ -291,7 +298,7 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 
 ```
 AstrBot 版本：
-插件版本：1.0.1.5
+插件版本：1.0.1.6
 平台（QQ/Telegram/...）：
 复现步骤：
 完整指令：
@@ -319,7 +326,7 @@ AstrBot 版本：
 **版本规则**：每次更新只递增最后一位 `+0.0.0.1`
 
 ```
-1.0.1.5 → 1.0.1.6 → … → 1.0.1.10 → 1.0.1.11 → …
+1.0.1.6 → 1.0.1.7 → … → 1.0.1.10 → 1.0.1.11 → …
 ```
 
 **更新方式**：WebUI 插件页点「检查更新」，或删掉旧文件夹重新放新的（规则数据不会丢，存在 data 目录）。
@@ -330,14 +337,8 @@ AstrBot 版本：
 
 ## 常见问题
 
-**Q：指令发了完全没反应，怎么办？**
-A：先去 WebUI → 插件管理，确认这个 Bot 的插件列表里勾选了「CTEX伴侣」。AstrBot 的插件开关是每个 Bot 分开的，新装的插件如果没勾上，指令会被直接过滤掉，日志里也不会报错。
-
 **Q：指令没反应？**
 A：确认发指令的账号在 AstrBot 的「管理员」列表里。本插件所有指令仅管理员可用。
-
-**Q：为什么 `/ctx` 在这个 bot 上没反应，在另一个 bot 上却能用？**
-A：每个 bot 的「唤醒前缀」是分开设置的，有的 bot 是 `/`，有的 bot 是 `.`。前缀不对时 `/ctx` 会被当成普通聊天。这时直接用不加前缀的 `ctx ...` 就行（比如 `ctx kk`），或者用那个 bot 自己的前缀（`.` 的 bot 就发 `.ctx help`）。
 
 **Q：规则显示「生效中」但 bot 没变化？**
 A：先 `/ctx test <编号>` 看注入内容对不对；再确认这条规则绑定的 Bot 就是你正在聊的 Bot（`/ctx status` 看当前 Bot）。

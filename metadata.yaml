@@ -12,7 +12,7 @@ desc: >
 
   支持每日循环与一次性、上下文注入与系统提示词两种位置、指定群聊生效、多时区、
   多规则并存、纯指令管理、可选到点提醒、规则导出导入。仅管理员可用。
-version: 1.0.1.5
+version: 1.0.1.6
 author: 娜莉灵
 repo: https://github.com/naliling/astrbot_plugin_ctx_timer
 support_platforms:
