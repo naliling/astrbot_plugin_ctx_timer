@@ -6,7 +6,7 @@
 窗口内自动把内容注入 LLM 上下文，窗口外自动撤下。
 
 作者: 娜莉灵
-版本: 1.0.1.2
+版本: 1.0.1.3
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
     get_astrbot_data_path = None  # type: ignore
 
 PLUGIN_NAME = "astrbot_plugin_ctx_timer"
-VERSION = "1.0.1.2"
+VERSION = "1.0.1.3"
 AUTHOR = "娜莉灵"
 
 DEFAULT_TZ = "UTC+3"
@@ -55,6 +55,14 @@ NOW_RE = re.compile(r"^now(?:([+-])(\d+)([mhd]))?$", re.IGNORECASE)
 TZ_RE = re.compile(r"^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$", re.IGNORECASE)
 
 COMMAND_WORDS = {"ctx", "上下文", "定时上下文", "ctx_timer", PLUGIN_NAME}
+SUB_WORDS = {
+    "help", "帮助", "?", "add", "添加", "新建", "list", "列表", "ls",
+    "show", "查看", "info", "del", "delete", "删除", "rm", "kk", "hal",
+    "on", "开启", "off", "关闭", "edit", "修改", "mode", "模式",
+    "tz", "时区", "timezone", "scope", "范围", "notify", "提醒",
+    "test", "测试", "status", "状态", "bots", "机器人",
+    "export", "导出", "import", "导入", "cancel", "取消",
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -483,6 +491,45 @@ class CtxTimerPlugin(Star):
         except Exception:
             return ""
 
+    def _strip_mentions(self, text: str) -> str:
+        """去掉开头的 @昵称(QQ) 片段，兼容先 @ 人再发指令的写法。"""
+        t = (text or "").strip()
+        while t.startswith("@"):
+            parts = t.split(None, 1)
+            if len(parts) < 2:
+                return ""
+            t = parts[1].strip()
+        return t
+
+    def _is_admin(self, event: AstrMessageEvent) -> bool:
+        try:
+            if event.is_admin():
+                return True
+        except Exception:
+            pass
+        try:
+            cfg = getattr(self.context, "astrbot_config", None) or {}
+            admins = cfg.get("admins_id", []) if hasattr(cfg, "get") else []
+            return self._uid(event) in [str(a) for a in admins]
+        except Exception:
+            return False
+
+    def _looks_like_command(self, text: str) -> bool:
+        t = self._strip_mentions(text)
+        if not t:
+            return False
+        low = t.lower()
+        for w in COMMAND_WORDS:
+            wl = w.lower()
+            if low == wl or low.startswith(wl + " "):
+                return True
+            if t.startswith(w):
+                rest = t[len(w):].strip()
+                if not rest:
+                    return True
+                return rest.split()[0].lower() in SUB_WORDS
+        return False
+
     def _scope_match(self, rule: dict, event: AstrMessageEvent) -> bool:
         scope = rule.get("scope") or {"type": "all"}
         if scope.get("type", "all") == "all":
@@ -554,6 +601,37 @@ class CtxTimerPlugin(Star):
         """上下文定时注入：帮助（中文指令）"""
         yield event.plain_result(await self._dispatch(event))
 
+    @filter.event_message_type(filter.EventMessageType.ALL)
+    async def cmd_bare(self, event: AstrMessageEvent):
+        """裸指令：不 @ 机器人、不加前缀也能用（仅管理员）。"""
+        if getattr(event, "is_at_or_wake_command", False):
+            return
+        text = self._strip_mentions(event.message_str or "")
+        if not text:
+            return
+        low = text.lower()
+        rest = None
+        for w in sorted(COMMAND_WORDS, key=len, reverse=True):
+            wl = w.lower()
+            if low == wl:
+                rest = ""
+                break
+            if low.startswith(wl + " "):
+                rest = text[len(w):].strip()
+                break
+            if text.startswith(w):
+                rest = text[len(w):].strip()
+                break
+        if rest is None:
+            return
+        sub = rest.split()[0].lower() if rest else ""
+        if sub and sub not in SUB_WORDS:
+            return
+        if not self._is_admin(event):
+            return
+        event.stop_event()
+        yield event.plain_result(await self._dispatch(event, text=text))
+
     # -- 分步向导监听 ------------------------------------------------------ #
     @filter.event_message_type(filter.EventMessageType.ALL)
     async def wizard_listener(self, event: AstrMessageEvent):
@@ -564,9 +642,11 @@ class CtxTimerPlugin(Star):
         text = (event.message_str or "").strip()
         if text.startswith(("/ctx", "/上下文", "／ctx")):
             return
+        if self._looks_like_command(text):
+            return
         if (datetime.now().timestamp() - st.get("ts", 0)) > 180:
             self._wizard.pop(uid, None)
-            yield event.plain_result("🕐 向导已超时（3 分钟），请重新发送 /ctx add")
+            yield event.plain_result("向导已超时（3 分钟），请重新发送 /ctx add")
             return
         event.stop_event()
         st["ts"] = datetime.now().timestamp()
@@ -640,8 +720,9 @@ class CtxTimerPlugin(Star):
         return "向导状态异常，已重置。"
 
     # -- 分发 -------------------------------------------------------------- #
-    async def _dispatch(self, event: AstrMessageEvent) -> str:
-        raw = (event.message_str or "").strip()
+    async def _dispatch(self, event: AstrMessageEvent, text: str | None = None) -> str:
+        raw = (text if text is not None else (event.message_str or ""))
+        raw = self._strip_mentions(raw).strip()
         if raw[:1] in ("/", "／", "!"):
             raw = raw[1:]
         tokens = raw.split()
@@ -657,6 +738,7 @@ class CtxTimerPlugin(Star):
             "help": self._cmd_help, "帮助": self._cmd_help, "?": self._cmd_help,
             "add": self._cmd_add, "添加": self._cmd_add, "新建": self._cmd_add,
             "list": self._cmd_list, "列表": self._cmd_list, "ls": self._cmd_list,
+            "kk": self._cmd_list,
             "show": self._cmd_show, "查看": self._cmd_show, "info": self._cmd_show,
             "del": self._cmd_del, "delete": self._cmd_del, "删除": self._cmd_del, "rm": self._cmd_del,
             "on": self._cmd_on, "开启": self._cmd_on,
@@ -668,6 +750,7 @@ class CtxTimerPlugin(Star):
             "notify": self._cmd_notify, "提醒": self._cmd_notify,
             "test": self._cmd_test, "测试": self._cmd_test,
             "status": self._cmd_status, "状态": self._cmd_status,
+            "hal": self._cmd_status,
             "bots": self._cmd_bots, "机器人": self._cmd_bots,
             "export": self._cmd_export, "导出": self._cmd_export,
             "import": self._cmd_import, "导入": self._cmd_import,
@@ -1372,10 +1455,12 @@ class CtxTimerPlugin(Star):
                 pass
 
 
-HELP_TEXT = """CTEX伴侣 v1.0.1.2
+HELP_TEXT = """CTEX伴侣 v1.0.1.3
 
 给 bot 设定「什么时候、注入什么上下文」。
 到点自动生效，过点自动撤下，多 Bot 各自独立。
+
+用法：/ctx 开头，或者不 @ 机器人直接发 ctx / 上下文。
 
 【创建】
 /ctx add                     分步向导（推荐）
@@ -1393,9 +1478,9 @@ HELP_TEXT = """CTEX伴侣 v1.0.1.2
 · 也支持 UTC+5:30 这类半小时时区
 
 【查看】
-/ctx list [-a]       列表（-a 含已结束）
+/ctx list [-a]       列表（简写 /ctx kk，-a 含已结束）
 /ctx show 1          详情
-/ctx status          当前生效情况
+/ctx status          当前生效情况（简写 /ctx hal）
 /ctx bots            所有 Bot 的规则数
 /ctx tz              查看各规则时区
 
