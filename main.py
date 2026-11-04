@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""上下文定时注入 (astrbot_plugin_ctx_timer)
+"""CTEX伴侣 (astrbot_plugin_ctx_timer)
 
 为每个 Bot 维护一套独立的「定时上下文」规则库：
 每条规则 = 一段注入内容 + 开始时间 + 关闭时间。
 窗口内自动把内容注入 LLM 上下文，窗口外自动撤下。
 
 作者: 娜莉灵
-版本: 1.0.1.1
+版本: 1.0.1.2
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent, MessageChain, filter
 from astrbot.api.star import Context, Star, register
 
-# 动态上下文块（AstrBot >= 4.5.7）
+# 上下文注入块（AstrBot >= 4.5.7）
 try:
     from astrbot.core.agent.message import TextPart
 except Exception:  # pragma: no cover
@@ -37,15 +37,15 @@ except Exception:  # pragma: no cover
     get_astrbot_data_path = None  # type: ignore
 
 PLUGIN_NAME = "astrbot_plugin_ctx_timer"
-VERSION = "1.0.1.1"
+VERSION = "1.0.1.2"
 AUTHOR = "娜莉灵"
 
-DEFAULT_TZ = "Asia/Shanghai"
+DEFAULT_TZ = "UTC+3"
 DEFAULT_INJECT = "context"  # context | system
 DEFAULT_TICK = 30
 DEFAULT_MAX_RULES = 50
 DEFAULT_NOTIFY = False
-ALLOW_CROSS_BOT = True
+ALLOW_CROSS_BOT = False
 
 DATE_RE = re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})$")
 MD_RE = re.compile(r"^(\d{1,2})-(\d{1,2})$")
@@ -398,7 +398,7 @@ def _admin_only():
     return deco(ptype.ADMIN)
 
 
-@register(PLUGIN_NAME, AUTHOR, "上下文定时注入：按时间段自动注入上下文，纯指令管理，多 Bot 独立规则库", VERSION)
+@register(PLUGIN_NAME, AUTHOR, "CTEX伴侣：到点自动注入上下文，过点自动撤下，纯指令管理，多 Bot 独立规则库", VERSION)
 class CtxTimerPlugin(Star):
     def __init__(self, context: Context, config: Any = None):
         try:
@@ -442,7 +442,9 @@ class CtxTimerPlugin(Star):
         return Path("data") / "plugin_data" / PLUGIN_NAME
 
     def _now(self) -> datetime:
-        name = str(self._cfg("timezone", DEFAULT_TZ) or DEFAULT_TZ)
+        name = str(self._cfg("timezone", DEFAULT_TZ) or DEFAULT_TZ).strip()
+        if name.lower() in ("", "auto", "系统", "跟随系统", "local"):
+            return datetime.now().astimezone()
         tz = resolve_tz(name, None)
         if tz is None:
             try:
@@ -596,12 +598,12 @@ class CtxTimerPlugin(Star):
             if parts and parts[-1].startswith("@"):
                 tz = resolve_tz(parts[-1][1:], None)
                 if tz is None:
-                    return "⚠️ 时区格式不对，示例：09:00 18:00 @UTC+8"
+                    return "时区格式不对，示例：09:00 18:00 @UTC+8"
                 tz_val = tz_name(tz)
                 parts = parts[:-1]
             spec, err, _ = parse_window(parts, now)
             if err:
-                return f"⚠️ {err}\n请重新输入时间，例如：09:00 18:00"
+                return f"{err}\n请重新输入时间，例如：09:00 18:00"
             st.update(spec)
             st["tz"] = tz_val
             st["step"] = "content"
@@ -629,7 +631,7 @@ class CtxTimerPlugin(Star):
             saved = self.store.add(pid, rule)
             self._wizard.pop(uid, None)
             return (
-                f"✅ 已创建规则 [{saved['id']}] {saved['name']}\n"
+                f"已创建规则 [{saved['id']}] {saved['name']}\n"
                 f"时间：{window_text(saved)}\n"
                 f"内容：{saved['content'][:60]}{'…' if len(saved['content']) > 60 else ''}\n"
                 "发送 /ctx list 查看全部规则。"
@@ -678,7 +680,7 @@ class CtxTimerPlugin(Star):
             return await fn(event, args)
         except Exception as e:
             logger.exception(f"[ctx_timer] 指令执行失败: {e}")
-            return f"⚠️ 执行出错：{e}"
+            return f"执行出错：{e}"
 
     # -- 各指令实现 -------------------------------------------------------- #
     async def _cmd_help(self, event, args) -> str:
@@ -721,7 +723,7 @@ class CtxTimerPlugin(Star):
                 "ts": datetime.now().timestamp(),
             }
             return (
-                "🪄 分步添加（发「取消」退出）\n"
+                "分步添加（发「取消」退出）\n"
                 "第 1/3 步：这条规则叫什么名字？\n\n"
                 "也可以一行搞定：\n"
                 "/ctx add 名称 09:00 18:00 注入内容\n"
@@ -734,7 +736,7 @@ class CtxTimerPlugin(Star):
         now = self._now()
         spec, err, used = parse_window(args[1:], now)
         if err:
-            return f"⚠️ {err}\n示例：/ctx add 早班 09:00 18:00 现在是工作时段"
+            return f"{err}\n示例：/ctx add 早班 09:00 18:00 现在是工作时段"
 
         content = " ".join(args[1 + used:]).strip().replace("\\n", "\n")
         if not content:
@@ -742,7 +744,7 @@ class CtxTimerPlugin(Star):
 
         pid = self._pid(event)
         if len(self.store.rules(pid)) >= int(self._cfg("max_rules_per_bot", DEFAULT_MAX_RULES)):
-            return f"⚠️ 当前 Bot 规则数已达上限（{self._cfg('max_rules_per_bot', DEFAULT_MAX_RULES)} 条），请先删除旧规则。"
+            return f"当前 Bot 规则数已达上限（{self._cfg('max_rules_per_bot', DEFAULT_MAX_RULES)} 条），请先删除旧规则。"
 
         rule = {
             "name": name[:30],
@@ -760,17 +762,16 @@ class CtxTimerPlugin(Star):
         }
         saved = self.store.add(pid, rule)
         return (
-            f"✅ 已创建规则 [{saved['id']}] {saved['name']}\n"
+            f"已创建规则 [{saved['id']}] {saved['name']}\n"
             f"时间：{window_text(saved)}\n"
-            f"注入：{'system_prompt' if saved['inject'] == 'system' else '动态上下文'}\n"
+            f"注入：{'system_prompt' if saved['inject'] == 'system' else '上下文注入'}\n"
             f"范围：全部会话\n"
             "发送 /ctx list 查看，/ctx test {0} 预览效果。".format(saved["id"])
         )
 
     def _fmt_line(self, rule: dict, now: datetime) -> str:
         state = rule_state(rule, now)
-        icon = {"生效中": "🟢", "未开始": "🕐", "已结束": "⚪", "未到时段": "🕐", "已停用": "⏸", "数据异常": "⚠️"}.get(state, "•")
-        return f"[{rule.get('id')}] {rule.get('name')}  {icon}{state}  {window_text(rule)}"
+        return f"[{rule.get('id')}] {rule.get('name')}  {state}  {window_text(rule)}"
 
     async def _cmd_list(self, event, args) -> str:
         args, want = self._pop_bot(args)
@@ -781,8 +782,8 @@ class CtxTimerPlugin(Star):
         rules = self.store.rules(pid)
         show_all = "-a" in args or "--all" in args
         if not rules:
-            return f"📭 Bot「{pid}」还没有任何定时上下文规则。\n发送 /ctx add 开始创建。"
-        lines = [f"📚 Bot「{pid}」的定时上下文（共 {len(rules)} 条）"]
+            return f"Bot「{pid}」还没有任何定时上下文规则。\n发送 /ctx add 开始创建。"
+        lines = [f"Bot「{pid}」的定时上下文（共 {len(rules)} 条）"]
         shown = 0
         for r in rules:
             st = rule_state(r, now)
@@ -844,7 +845,7 @@ class CtxTimerPlugin(Star):
             f"状态：{rule_state(rule, now)}\n"
             f"时间：{window_text(rule)}\n"
             f"时区：{rule.get('tz') or '跟随全局（' + tz_name(now.tzinfo) + '）'}\n"
-            f"注入：{'system_prompt' if rule.get('inject') == 'system' else '动态上下文'}\n"
+            f"注入：{'system_prompt' if rule.get('inject') == 'system' else '上下文注入'}\n"
             f"范围：{scope_txt}\n"
             f"到点提醒：{'开' if rule.get('notify') else '关'}\n"
             f"创建：{rule.get('created_at', '未知')}\n"
@@ -866,7 +867,7 @@ class CtxTimerPlugin(Star):
         if not rule:
             return f"没有找到编号为 {rid} 的规则。"
         self.store.delete(pid, rid)
-        return f"🗑 已删除规则 [{rid}] {rule.get('name')}"
+        return f"已删除规则 [{rid}] {rule.get('name')}"
 
     async def _toggle(self, event, args, value: bool) -> str:
         args, want = self._pop_bot(args)
@@ -884,7 +885,7 @@ class CtxTimerPlugin(Star):
             return f"没有找到编号为 {rid} 的规则。"
         rule["enabled"] = value
         self.store.save()
-        return f"{'✅ 已启用' if value else '⏸ 已停用'}规则 [{rid}] {rule.get('name')}"
+        return f"{'已启用' if value else '已停用'}规则 [{rid}] {rule.get('name')}"
 
     async def _cmd_on(self, event, args) -> str:
         return await self._toggle(event, args, True)
@@ -924,7 +925,7 @@ class CtxTimerPlugin(Star):
             rule["content"] = value.replace("\\n", "\n")
         elif field in ("注入", "inject"):
             if value not in ("context", "system", "动态", "系统"):
-                return "注入方式只能是 context（动态上下文）或 system（system_prompt）。"
+                return "注入方式只能是 context（上下文注入）或 system（系统提示词）。"
             rule["inject"] = "system" if value in ("system", "系统") else "context"
         elif field in ("开始", "start", "关闭", "end", "时间"):
             now = self._now()
@@ -943,7 +944,7 @@ class CtxTimerPlugin(Star):
                 dt, has_date, date_only, _ = p
                 spec, err2 = self._rebuild_window(rule, dt, has_date, date_only, False)
             if err2:
-                return f"⚠️ {err2}"
+                return f"{err2}"
             rule.update(spec)
         elif field in ("时区", "tz", "timezone"):
             if value.lower() in ("默认", "全局", "global", "default", "off", "跟随全局"):
@@ -956,7 +957,7 @@ class CtxTimerPlugin(Star):
         else:
             return "未知字段，可用：名称 / 内容 / 开始 / 关闭 / 注入 / 时区"
         self.store.save()
-        return f"✏️ 已更新规则 [{rid}] {rule.get('name')}\n时间：{window_text(rule)}"
+        return f"已更新规则 [{rid}] {rule.get('name')}\n时间：{window_text(rule)}"
 
     def _rebuild_window(self, rule, dt, has_date, date_only, is_start):
         """修改单侧时间后重建窗口。"""
@@ -1033,14 +1034,15 @@ class CtxTimerPlugin(Star):
         val = args[1].lower()
         if val in ("system", "系统"):
             rule["inject"] = "system"
-            tip = "⚠️ system_prompt 每轮变化会破坏提示词缓存，可能增加费用。"
+            tip = "系统提示词每轮变化会破坏提示词缓存，可能增加费用。"
         elif val in ("context", "动态"):
             rule["inject"] = "context"
-            tip = "✅ 动态上下文不破坏缓存。"
+            tip = "上下文注入不破坏缓存。"
         else:
             return "只能是 system 或 context。"
         self.store.save()
-        return f"已设置规则 [{rid}] 注入方式为 {rule['inject']}\n{tip}"
+        label = "系统提示词（system_prompt）" if rule["inject"] == "system" else "上下文注入"
+        return f"已设置规则 [{rid}] 注入方式为{label}\n{tip}"
 
     async def _cmd_tz(self, event, args) -> str:
         args, want = self._pop_bot(args)
@@ -1050,7 +1052,7 @@ class CtxTimerPlugin(Star):
         now = self._now()
         if not args:
             lines = [
-                f"🌍 全局时区：{tz_name(now.tzinfo)}（当前 {now.strftime('%Y-%m-%d %H:%M')}）",
+                f"全局时区：{tz_name(now.tzinfo)}（当前 {now.strftime('%Y-%m-%d %H:%M')}）",
                 "",
                 "设置某条规则的时区：",
                 "/ctx tz 1 UTC+8      常用：UTC+8 / UTC+2 / UTC+3 / UTC+6 / UTC-3",
@@ -1089,7 +1091,7 @@ class CtxTimerPlugin(Star):
         self.store.save()
         local = now.astimezone(tz)
         return (
-            f"🌍 规则 [{rid}] 时区已设为 {rule['tz']}\n"
+            f"规则 [{rid}] 时区已设为 {rule['tz']}\n"
             f"该时区现在：{local.strftime('%Y-%m-%d %H:%M')}\n"
             f"窗口：{window_text(rule)}"
         )
@@ -1175,13 +1177,13 @@ class CtxTimerPlugin(Star):
             rule["notify"] = True
             rule["notify_umo"] = rule.get("notify_umo") or self._umo(event)
             if not rule["notify_umo"]:
-                return "⚠️ 当前会话没有可用的 unified_msg_origin，无法发送提醒。"
+                return "当前会话没有可用的 unified_msg_origin，无法发送提醒。"
             self.store.save()
-            return f"🔔 已开启规则 [{rid}] 的到点提醒，将发送到当前会话。"
+            return f"已开启规则 [{rid}] 的到点提醒，将发送到当前会话。"
         if val in ("off", "关", "false", "0"):
             rule["notify"] = False
             self.store.save()
-            return f"🔕 已关闭规则 [{rid}] 的到点提醒。"
+            return f"已关闭规则 [{rid}] 的到点提醒。"
         return "只能是 on 或 off。"
 
     async def _cmd_test(self, event, args) -> str:
@@ -1202,7 +1204,7 @@ class CtxTimerPlugin(Star):
         state = rule_state(rule, now)
         preview = self._render([rule], now)
         note = "" if state == "生效中" else f"\n（注意：当前状态是「{state}」，此预览不会真的注入）"
-        return f"🧪 规则 [{rid}] 注入预览{note}\n\n{preview}"
+        return f"规则 [{rid}] 注入预览{note}\n\n{preview}"
 
     async def _cmd_status(self, event, args) -> str:
         pid = self._pid(event)
@@ -1210,9 +1212,9 @@ class CtxTimerPlugin(Star):
         rules = self.store.rules(pid)
         active = [r for r in rules if rule_active(r, now)]
         lines = [
-            f"🕒 当前时间：{now.strftime('%Y-%m-%d %H:%M:%S')}",
-            f"🤖 当前 Bot：{pid}",
-            f"📚 规则总数：{len(rules)} 条，生效中 {len(active)} 条",
+            f"当前时间：{now.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"当前 Bot：{pid}",
+            f"规则总数：{len(rules)} 条，生效中 {len(active)} 条",
         ]
         if active:
             lines.append("")
@@ -1262,14 +1264,14 @@ class CtxTimerPlugin(Star):
             return ""
         _, what, when, r = best
         label = f"（{r['tz']}）" if r.get("tz") else ""
-        return f"⏭ 下一条：[{r['id']}] {r['name']} 将于 {when.strftime('%Y-%m-%d %H:%M')}{label} {what}"
+        return f"下一条：[{r['id']}] {r['name']} 将于 {when.strftime('%Y-%m-%d %H:%M')}{label} {what}"
 
     async def _cmd_bots(self, event, args) -> str:
         bots = self.store.bot_ids()
         if not bots:
-            return "📭 还没有任何 Bot 建立过规则。"
+            return "还没有任何 Bot 建立过规则。"
         now = self._now()
-        lines = ["🤖 已建立规则库的 Bot："]
+        lines = ["已建立规则库的 Bot："]
         for pid in bots:
             rules = self.store.rules(pid)
             act = sum(1 for r in rules if rule_active(r, now))
@@ -1282,7 +1284,7 @@ class CtxTimerPlugin(Star):
     async def _cmd_export(self, event, args) -> str:
         pid = self._pid(event)
         data = {"bot": pid, "rules": self.store.rules(pid)}
-        return "📦 导出（复制下面整段保存）：\n" + json.dumps(data, ensure_ascii=False)
+        return "导出（复制下面整段保存）：\n" + json.dumps(data, ensure_ascii=False)
 
     async def _cmd_import(self, event, args) -> str:
         if not args:
@@ -1294,7 +1296,7 @@ class CtxTimerPlugin(Star):
             if not isinstance(rules, list):
                 raise ValueError("rules 必须是数组")
         except Exception as e:
-            return f"⚠️ 解析失败：{e}"
+            return f"解析失败：{e}"
         pid = self._pid(event)
         count = 0
         for r in rules:
@@ -1317,7 +1319,7 @@ class CtxTimerPlugin(Star):
                 continue
             self.store.add(pid, rule)
             count += 1
-        return f"📥 已导入 {count} 条规则到 Bot「{pid}」。"
+        return f"已导入 {count} 条规则到 Bot「{pid}」。"
 
     # -- 到点提醒 ---------------------------------------------------------- #
     def _tick_seconds(self) -> int:
@@ -1353,9 +1355,9 @@ class CtxTimerPlugin(Star):
                 if not umo:
                     continue
                 if active:
-                    text = f"⏰ 定时上下文已生效：[{rule.get('id')}] {rule.get('name')}\n{window_text(rule)}"
+                    text = f"定时上下文已生效：[{rule.get('id')}] {rule.get('name')}\n{window_text(rule)}"
                 else:
-                    text = f"🔕 定时上下文已关闭：[{rule.get('id')}] {rule.get('name')}"
+                    text = f"定时上下文已关闭：[{rule.get('id')}] {rule.get('name')}"
                 try:
                     await self.context.send_message(umo, MessageChain().message(text))
                 except Exception as e:
@@ -1370,7 +1372,7 @@ class CtxTimerPlugin(Star):
                 pass
 
 
-HELP_TEXT = """📖 上下文定时注入 v1.0.1.1
+HELP_TEXT = """CTEX伴侣 v1.0.1.2
 
 给 bot 设定「什么时候、注入什么上下文」。
 到点自动生效，过点自动撤下，多 Bot 各自独立。
@@ -1386,7 +1388,7 @@ HELP_TEXT = """📖 上下文定时注入 v1.0.1.1
 · 一次性   → 2026-11-05 09:00 2026-11-11 23:59
 · 相对     → now+30m now+2h
 
-时区写法（不加就跟随全局）：
+时区写法（不加 -tz 就跟随全局，默认 UTC+3）：
 · -tz UTC+8 / UTC+2 / UTC+3 / UTC+6 / UTC-3
 · 也支持 UTC+5:30 这类半小时时区
 
@@ -1414,7 +1416,7 @@ HELP_TEXT = """📖 上下文定时注入 v1.0.1.1
 
 跨 Bot 管理：任意指令后加 -b <Bot名>，例如 /ctx list -b aiocqhttp
 
-💡 最有用的一种用法：把「硬要求」做成关键提示。
+最有用的一种用法：把「硬要求」做成关键提示。
    例：凌晨 1-5 点必须变成另一个角色，就在这个窗口强制注入人格提示，
    模型不会跑偏到第二人格，5 点后自动还原。"""
 

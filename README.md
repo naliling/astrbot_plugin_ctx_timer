@@ -1,15 +1,15 @@
-# 上下文定时注入 · astrbot_plugin_ctx_timer
+# CTEX伴侣 · 上下文定时注入（astrbot_plugin_ctx_timer）
 
 > 给 bot 一个「时间表」：**到点自动注入上下文，过点自动撤下。**
 
-作者：**娜莉灵**　|　版本：**1.0.1.1**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
+作者：**娜莉灵**　|　版本：**1.0.1.2**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
 
 [![GitHub](https://img.shields.io/badge/GitHub-naliling%2Fastrbot__plugin__ctx__timer-181717?logo=github)](https://github.com/naliling/astrbot_plugin_ctx_timer)
-[![Version](https://img.shields.io/badge/version-1.0.1.1-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.1.2-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/LICENSE)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A54.5.7-ff6b6b)](https://astrbot.app)
 
-> 📦 仓库：<https://github.com/naliling/astrbot_plugin_ctx_timer>　·　问题反馈：<https://github.com/naliling/astrbot_plugin_ctx_timer/issues>
+> 仓库：<https://github.com/naliling/astrbot_plugin_ctx_timer>　·　问题反馈：<https://github.com/naliling/astrbot_plugin_ctx_timer/issues>
 
 ---
 
@@ -18,7 +18,7 @@
 ### 1. 安装
 
 **方式一：插件市场（推荐）**
-AstrBot WebUI → 插件 → 插件市场 → 搜索「上下文定时注入」→ 安装 → 重载。
+AstrBot WebUI → 插件 → 插件市场 → 搜索「CTEX伴侣」→ 安装 → 重载。
 
 **方式二：手动**
 把整个 `astrbot_plugin_ctx_timer` 文件夹放进 `AstrBot/data/plugins/`，然后在 WebUI 插件页点「重载插件」。
@@ -60,7 +60,7 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 
 ### 4. 时区怎么写
 
-默认跟随插件配置的时区（默认 `Asia/Shanghai`）。**需要别的时区，不用自己换算，直接标出来就行**：
+默认跟随插件配置的时区（默认 `UTC+3`，莫斯科时间；配置页可改，填 `auto` 就跟随服务器）。**需要别的时区，不用自己换算，直接标出来就行**：
 
 | 地区 | 写法 |
 |---|---|
@@ -213,17 +213,17 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 
 ## 功能
 
-- ⏰ **双时间模式**：每日循环（含跨天）+ 一次性绝对时间，自动识别
-- 🎯 **真正的上下文注入**：走 `on_llm_request` 钩子改 `ProviderRequest`，不是假功能
-- 🧠 **两种注入位置**：动态上下文（不破坏提示词缓存）/ system_prompt（权重最高），每条规则可单独选
-- 🌍 **多时区**：全局可设，每条规则还能单独指定 `UTC+8 / UTC+2 / UTC+3 / UTC+6 / UTC-3 / UTC+5:30`，自动换算不用手动算时差
-- 🤖 **多 Bot 隔离**：每个 Bot 独立规则库，A bot 的规则不会串到 B bot
-- 👥 **会话范围**：全部会话 / 指定群 / 指定用户，逐条设置
-- 📚 **多规则并存**：同时命中多条时按编号顺序拼接，带 `<scheduled_context>` 标签，模型分得清
-- 🔔 **到点提醒**：可选在生效/关闭时往会话发一条提示
-- 💾 **持久化**：规则存 `data/plugin_data/astrbot_plugin_ctx_timer/rules.json`，重启、更新插件都不丢
-- 🧩 **零依赖**：只用 AstrBot 内置能力和 Python 标准库
-- 🛡 **容错**：单条规则数据异常不会影响其它规则，也不会让插件崩溃
+- **双时间模式**：每日循环（含跨天）+ 一次性绝对时间，自动识别
+- **真正的上下文注入**：走 `on_llm_request` 钩子改 `ProviderRequest`，不是假功能
+- **两种注入位置**：上下文注入（不破坏提示词缓存）/ 系统提示词（权重最高），每条规则可单独选
+- **多时区**：全局可设，每条规则还能单独指定 `UTC+8 / UTC+2 / UTC+3 / UTC+6 / UTC-3 / UTC+5:30`，自动换算不用手动算时差
+- **多 Bot 隔离**：每个 Bot 独立规则库，A bot 的规则不会串到 B bot
+- **会话范围**：全部会话 / 指定群 / 指定用户，逐条设置
+- **多规则并存**：同时命中多条时按编号顺序拼接，带 `<scheduled_context>` 标签，模型分得清
+- **到点提醒**：可选在生效/关闭时往会话发一条提示
+- **持久化**：规则存 `data/plugin_data/astrbot_plugin_ctx_timer/rules.json`，重启、更新插件都不丢
+- **零依赖**：只用 AstrBot 内置能力和 Python 标准库
+- **容错**：单条规则数据异常不会影响其它规则，也不会让插件崩溃
 
 ### 注入长什么样
 
@@ -238,21 +238,32 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 
 模型能明确区分「这是设定」和「这是用户在说话」。
 
+### 配置项（WebUI 插件配置页，全部有默认值，不改也能用）
+
+| 配置项 | 默认 | 说明 |
+|---|---|---|
+| 默认时区 | `UTC+3` | 所有规则按它算时间。可填 `UTC+8`、`Asia/Shanghai`、`auto`（跟随服务器）；单条规则能单独改 |
+| 新建规则的注入位置 | 上下文注入 | 省钱、不影响提示词缓存；也可选系统提示词（管得最严） |
+| 新建规则默认发到点提醒 | 关 | 开着会在生效、结束时发一条提示 |
+| 到点检查间隔 | 30 秒 | 只有开了提醒的规则才发消息，注入本身不看它 |
+| 每个 Bot 规则上限 | 50 条 | 各自独立计数，满了拒绝新建 |
+| 跨 Bot 管理 | 关 | 开着才能用 `-b` 管别的 Bot 的规则 |
+
 ---
 
 ## 宣传与问题反馈
 
 **如果你觉得它好用，请帮我做三件小事：**
 
-1. ⭐ 在插件仓库点个 **Star**，让更多人看到
-2. 💬 在 AstrBot 群里**推荐一句**，说清楚你用它在做什么场景
-3. 🐛 遇到问题**带截图反馈**，比一句「用不了」有用一百倍
+1. 在插件仓库点个 **Star**，让更多人看到
+2. 在 AstrBot 群里**推荐一句**，说清楚你用它在做什么场景
+3. 遇到问题**带截图反馈**，比一句「用不了」有用一百倍
 
 **问题反馈请带上这些信息**（缺了很难定位）：
 
 ```
 AstrBot 版本：
-插件版本：1.0.1.1
+插件版本：1.0.1.2
 平台（QQ/Telegram/...）：
 复现步骤：
 完整指令：
@@ -271,16 +282,16 @@ AstrBot 版本：
 
 **这个插件会一直更新，只要你愿意反馈。**
 
-- 🐞 **发现 bug** → 提 issue，我会修
-- 💡 **想要新功能** → 提 issue 说清使用场景，合适就做
-- 📝 **文档看不懂** → 直接说哪句看不懂，我改文档
-- 🌍 **想加新平台** → 告诉我平台名，我加适配
-- 🔧 **会写代码** → 欢迎 PR，合并后署名
+- **发现 bug** → 提 issue，我会修
+- **想要新功能** → 提 issue 说清使用场景，合适就做
+- **文档看不懂** → 直接说哪句看不懂，我改文档
+- **想加新平台** → 告诉我平台名，我加适配
+- **会写代码** → 欢迎 PR，合并后署名
 
 **版本规则**：每次更新只递增最后一位 `+0.0.0.1`
 
 ```
-1.0.1.1 → 1.0.1.2 → 1.0.1.3 → … → 1.0.1.10 → 1.0.1.11 → …
+1.0.1.2 → 1.0.1.3 → 1.0.1.4 → … → 1.0.1.10 → 1.0.1.11 → …
 ```
 
 **更新方式**：WebUI 插件页点「检查更新」，或删掉旧文件夹重新放新的（规则数据不会丢，存在 data 目录）。
@@ -306,8 +317,8 @@ A：不用，改完立即生效。
 **Q：我在国外 / bot 在别的时区，时间对不上？**
 A：用 `-tz UTC+2` 或 `/ctx tz 1 UTC+3` 给规则单独标时区，写几点就是那个时区的几点。也可以改插件配置里的全局时区。
 
-**Q：`system_prompt` 和「动态上下文」选哪个？**
-A：默认用动态上下文，不破坏提示词缓存、更省钱。只有需要极强约束（比如硬性角色设定）时才用 system_prompt。
+**Q：系统提示词和上下文注入选哪个？**
+A：默认用上下文注入，不破坏提示词缓存、更省钱。只有需要极强约束（比如硬性角色设定）时才用系统提示词。
 
 ---
 
