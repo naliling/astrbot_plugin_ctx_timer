@@ -1,0 +1,30 @@
+name: astrbot_plugin_ctx_timer
+display_name: 上下文定时注入
+short_desc: 按开始/关闭时间自动注入上下文，纯指令管理，多 Bot 各自独立
+desc: >
+  给每个 Bot 建立独立的「定时上下文」规则库。为每条规则设定一个预计开始时间与关闭时间，
+  窗口内自动把指定内容注入到 LLM 上下文，窗口外自动撤下。支持每日循环与一次性两种时间模式、
+  动态上下文与 system_prompt 两种注入位置、全部会话或指定群聊、多规则并存、纯指令增删改查、
+  可选到点提醒与规则导入导出。
+version: 1.0.1.1
+author: 娜莉灵
+repo: https://github.com/naliling/astrbot_plugin_ctx_timer
+support_platforms:
+  - aiocqhttp
+  - qq_official
+  - qq_official_webhook
+  - telegram
+  - discord
+  - lark
+  - dingtalk
+  - slack
+  - kook
+  - satori
+  - wecom
+  - weixin_oc
+  - misskey
+  - line
+  - matrix
+  - mattermost
+  - vocechat
+astrbot_version: ">=4.5.7"

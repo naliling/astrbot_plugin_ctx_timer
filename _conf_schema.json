@@ -1,0 +1,66 @@
+{
+  "timezone": {
+    "description": "① 时区（全局默认）",
+    "type": "string",
+    "default": "Asia/Shanghai",
+    "obvious_hint": true,
+    "hint": "【管什么】所有规则的开始/关闭时间都按这个时区解释。默认 Asia/Shanghai（UTC+8）。\n【两种写法】① 时区名：Asia/Shanghai、Asia/Tokyo；② 偏移：UTC+8、UTC+2、UTC+3、UTC+6、UTC-3、UTC+5:30（也认 +8、GMT-3、UTC 这种简写）。\n【还能单条覆盖】每条规则可单独指定：/ctx add 早班 09:00 18:00 内容 -tz UTC+2，或 /ctx tz <编号> UTC+2；/ctx tz <编号> 默认 恢复跟随这里。\n【注意】改这里不会影响已经单独设了时区的规则。"
+  },
+  "default_inject": {
+    "description": "② 新建规则的默认注入位置",
+    "type": "string",
+    "default": "context",
+    "options": [
+      "context",
+      "system"
+    ],
+    "labels": [
+      "动态上下文（推荐）",
+      "system_prompt"
+    ],
+    "subtitles": [
+      "不破坏提示词缓存，成本低",
+      "权重最高，但每轮变化会破坏缓存"
+    ],
+    "obvious_hint": true,
+    "hint": "【管什么】新建规则默认把内容塞到哪里。只影响新建，已有规则用 /ctx mode <编号> context|system 单独改，/ctx show 能看到每条用的哪种。\n【context】追加到本轮用户消息之后，模型照样看得到，但不改系统提示词，提示词缓存不失效，成本最低。日常用这个。\n【system】拼进系统提示词，权重最高，能压住原有人格设定，适合「凌晨强制换人格」这类硬要求；但系统提示词每轮变化会让缓存失效，成本可能涨数倍，别让规则频繁进出窗口。"
+  },
+  "default_notify": {
+    "description": "③ 到点提醒（新建规则默认开关）",
+    "type": "bool",
+    "default": false,
+    "obvious_hint": true,
+    "hint": "【管什么】新建规则时是否默认开启「到点提醒」。\n【开】规则生效/结束时，向创建规则的会话发一条提示消息，例如「【定时上下文】夜班人格 已生效」。\n【关（默认）】静默生效，不打扰任何人，只是上下文悄悄变了。\n【单条改】/ctx notify <编号> on|off；/ctx show 可看到每条状态。\n【限制】只在 Bot 进程运行期间发；Bot 关着的那段时间错过了不补发。"
+  },
+  "notify_tick": {
+    "description": "④ 提醒检查间隔（秒）",
+    "type": "int",
+    "default": 30,
+    "slider": {
+      "min": 10,
+      "max": 300,
+      "step": 10
+    },
+    "obvious_hint": true,
+    "hint": "【管什么】后台每隔多少秒检查一次「有没有规则到点生效 / 到点结束」。\n【只有开了提醒才发消息】没开提醒的规则不产生任何消息，这个后台任务几乎不耗资源。\n【怎么选】越小越准时（误差≈间隔），越大越省 CPU。30 秒适合大多数场景；要求精确到分钟就用 10。\n【注意】注入本身不依赖这个间隔——每轮对话都会实时判断当前是否在窗口内，所以就算后台没跑到，该注入的也一定会注入。"
+  },
+  "max_rules_per_bot": {
+    "description": "⑤ 每个 Bot 的规则上限",
+    "type": "int",
+    "default": 50,
+    "slider": {
+      "min": 1,
+      "max": 500,
+      "step": 1
+    },
+    "obvious_hint": true,
+    "hint": "【管什么】每个 Bot 最多能存多少条规则，各自独立计数。\n【超了会怎样】/ctx add 直接拒绝，提示先删旧的；已有规则不受影响，照常注入。\n【配套指令】/ctx status 看当前用了多少条；/ctx list 看全部；/ctx del <编号> 删除；/ctx off <编号> 只是停用不占位。\n【建议】50 条足够日常用；填 500 基本等于不限。"
+  },
+  "allow_cross_bot": {
+    "description": "⑥ 跨 Bot 管理",
+    "type": "bool",
+    "default": true,
+    "obvious_hint": true,
+    "hint": "【管什么】管理员能不能在一个 Bot 的会话里，管理另一个 Bot 的规则。\n【开（默认）】支持 -b 参数：/ctx list -b bot2、/ctx add 早班 09:00 18:00 内容 -b bot2、/ctx del 3 -b bot2。一个人管多个 Bot 不用来回切号。\n【关】所有 -b 都会被拒绝，只能管当前 Bot 自己的规则。\n【两种情况下规则库都是完全隔离的】每个 Bot 一套独立分区，A 的规则绝不会注入到 B 的对话里；跨 Bot 只是「管理入口」，不是「共享规则」。\n【权限】整个插件只有管理员能用（/ctx 所有子指令），普通用户看不到也改不了。"
+  }
+}
