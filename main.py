@@ -6,7 +6,7 @@
 窗口内自动把内容注入 LLM 上下文，窗口外自动撤下。
 
 作者: 娜莉灵
-版本: 1.0.1.4
+版本: 1.0.1.5
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
     get_astrbot_data_path = None  # type: ignore
 
 PLUGIN_NAME = "astrbot_plugin_ctx_timer"
-VERSION = "1.0.1.4"
+VERSION = "1.0.1.5"
 AUTHOR = "娜莉灵"
 
 DEFAULT_TZ = "UTC+3"
@@ -571,6 +571,7 @@ class CtxTimerPlugin(Star):
             if not rules:
                 return
             now = self._now()
+            logger.info(f"[ctx_timer] 注入 {len(rules)} 条规则 -> {self._pid(event)}")
             sys_rules = [r for r in rules if r.get("inject") == "system"]
             ctx_rules = [r for r in rules if r.get("inject") != "system"]
 
@@ -606,6 +607,16 @@ class CtxTimerPlugin(Star):
     @filter.event_message_type(filter.EventMessageType.ALL)
     async def cmd_bare(self, event: AstrMessageEvent):
         """裸指令：不 @ 机器人、不加前缀也能用（仅管理员）。"""
+        _raw = event.message_str or ""
+        if ("ctx" in _raw.lower()) or ("上下文" in _raw):
+            try:
+                _adm = self._is_admin(event)
+            except Exception:
+                _adm = "err"
+            logger.info(
+                f"[ctx_timer] ALL 处理器被调用：{_raw!r} "
+                f"wake={getattr(event, 'is_at_or_wake_command', None)} admin={_adm} pid={self._pid(event)}"
+            )
         if getattr(event, "is_at_or_wake_command", False):
             return
         text = self._strip_mentions(event.message_str or "")
@@ -1462,7 +1473,7 @@ class CtxTimerPlugin(Star):
                 pass
 
 
-HELP_TEXT = """CTEX伴侣 v1.0.1.4
+HELP_TEXT = """CTEX伴侣 v1.0.1.5
 
 给 bot 设定「什么时候、注入什么上下文」。
 到点自动生效，过点自动撤下，多 Bot 各自独立。

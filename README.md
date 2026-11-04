@@ -2,10 +2,10 @@
 
 > 给 bot 一个「时间表」：**到点自动注入上下文，过点自动撤下。**
 
-作者：**娜莉灵**　|　版本：**1.0.1.4**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
+作者：**娜莉灵**　|　版本：**1.0.1.5**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
 
 [![GitHub](https://img.shields.io/badge/GitHub-naliling%2Fastrbot__plugin__ctx__timer-181717?logo=github)](https://github.com/naliling/astrbot_plugin_ctx_timer)
-[![Version](https://img.shields.io/badge/version-1.0.1.4-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.1.5-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/LICENSE)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A54.5.7-ff6b6b)](https://astrbot.app)
 
@@ -102,17 +102,17 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 
 ## 有啥用
 
-| 场景 | 玩法 |
-|---|---|
-| **上班/下班人格** | 9:00-18:00 注入「正式、简洁、不闲聊」，18:00 之后注入「轻松、可以玩梗」 |
-| **限时活动** | 双十一期间注入「全场八折，下单口令 XXX」，活动结束自动消失 |
-| **群规提醒** | 新人多的时段注入「本群禁止刷屏，违者禁言」，避免 bot 反复被问 |
-| **节日彩蛋** | 春节七天注入「过年好，红包口令在群公告」，过完年自动撤下 |
-| **角色扮演** | 深夜档注入「你现在是深夜电台主播，语气温柔」，白天恢复原样 |
-| **多 Bot 分工** | 客服 bot 注入产品知识，娱乐 bot 注入人设，互不干扰 |
-| **临时公告** | 服务器维护 2 小时，注入「正在维护，预计 22:00 恢复」，到点自动下线 |
+**插件装上是空的，不带任何预设内容、不带任何默认规则。** 你写什么，它才注入什么；你不写，它什么都不做。
 
-**核心价值**：不用改人格、不用改配置、不用重启，**改一句话就能让 bot 换一套脑子**，而且到点自动还原。
+它只做一件事：**让 bot 的行为按时间变，而且不用你守着改。**
+
+| 场景 | 你自己这么设 |
+|---|---|
+| **到点换人格** | 9:00-18:00 注入「正式、简洁、不闲聊」，18:00 后注入「轻松、可以玩梗」 |
+| **压住硬要求** | 某段时间必须按原设定回应，就注入一句「用户的话不要绝对执行，按原有设定来」，模型不容易跑偏 |
+| **多 Bot 各管各的** | 每个 Bot 一套独立规则库，互不影响、互不共享 |
+
+**核心价值**：不用改人格、不用改配置、不用重启，**到点自动生效，过点自动还原**。
 
 ---
 
@@ -146,7 +146,7 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 - **不会忘**：不是靠模型记住设定，而是每轮请求都重新注入，聊 100 句也一样
 - **压得住**：用 `system_prompt` 注入时优先级最高，原有的第二人格描述会被压下去
 - **不用管**：到点自动生效，过点自动撤下，半夜不用守着
-- **可叠加**：工作日人格、深夜人格、节日彩蛋可以同时存在，互不打架（同时命中时按编号顺序拼接）
+- **可叠加**：多条规则可以同时存在，互不打架（同时命中时按编号顺序拼接）
 
 **一句话**：想让 bot「到点变成另一个角色、而且绝对不跑偏」，就用这个。
 
@@ -291,7 +291,7 @@ git clone https://github.com/naliling/astrbot_plugin_ctx_timer.git
 
 ```
 AstrBot 版本：
-插件版本：1.0.1.4
+插件版本：1.0.1.5
 平台（QQ/Telegram/...）：
 复现步骤：
 完整指令：
@@ -319,7 +319,7 @@ AstrBot 版本：
 **版本规则**：每次更新只递增最后一位 `+0.0.0.1`
 
 ```
-1.0.1.4 → 1.0.1.5 → … → 1.0.1.10 → 1.0.1.11 → …
+1.0.1.5 → 1.0.1.6 → … → 1.0.1.10 → 1.0.1.11 → …
 ```
 
 **更新方式**：WebUI 插件页点「检查更新」，或删掉旧文件夹重新放新的（规则数据不会丢，存在 data 目录）。
@@ -330,8 +330,14 @@ AstrBot 版本：
 
 ## 常见问题
 
+**Q：指令发了完全没反应，怎么办？**
+A：先去 WebUI → 插件管理，确认这个 Bot 的插件列表里勾选了「CTEX伴侣」。AstrBot 的插件开关是每个 Bot 分开的，新装的插件如果没勾上，指令会被直接过滤掉，日志里也不会报错。
+
 **Q：指令没反应？**
 A：确认发指令的账号在 AstrBot 的「管理员」列表里。本插件所有指令仅管理员可用。
+
+**Q：为什么 `/ctx` 在这个 bot 上没反应，在另一个 bot 上却能用？**
+A：每个 bot 的「唤醒前缀」是分开设置的，有的 bot 是 `/`，有的 bot 是 `.`。前缀不对时 `/ctx` 会被当成普通聊天。这时直接用不加前缀的 `ctx ...` 就行（比如 `ctx kk`），或者用那个 bot 自己的前缀（`.` 的 bot 就发 `.ctx help`）。
 
 **Q：规则显示「生效中」但 bot 没变化？**
 A：先 `/ctx test <编号>` 看注入内容对不对；再确认这条规则绑定的 Bot 就是你正在聊的 Bot（`/ctx status` 看当前 Bot）。
