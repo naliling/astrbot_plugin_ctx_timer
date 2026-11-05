@@ -6,7 +6,7 @@
 窗口内自动把内容注入 LLM 上下文，窗口外自动撤下。
 
 作者: 娜莉灵
-版本: 1.0.1.6
+版本: 1.0.1.7
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
     get_astrbot_data_path = None  # type: ignore
 
 PLUGIN_NAME = "astrbot_plugin_ctx_timer"
-VERSION = "1.0.1.6"
+VERSION = "1.0.1.7"
 AUTHOR = "娜莉灵"
 
 DEFAULT_TZ = "UTC+3"
@@ -1473,7 +1473,7 @@ class CtxTimerPlugin(Star):
                 pass
 
 
-HELP_TEXT = """CTEX伴侣 v1.0.1.6 · 到点自动注入上下文，过点自动撤下
+HELP_TEXT = """CTEX伴侣 v1.0.1.7 · 到点自动注入上下文，过点自动撤下
 
 【咋用】
   ctx add 早班 09:00 18:00 现在是工作时间，回复要正式

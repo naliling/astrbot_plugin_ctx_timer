@@ -2,10 +2,10 @@
 
 > 给 bot 一个「时间表」：**到点自动注入上下文，过点自动撤下。**
 
-作者：**娜莉灵**　|　版本：**1.0.1.6**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
+作者：**娜莉灵**　|　版本：**1.0.1.7**　|　平台：AstrBot　|　纯指令，无需 WebUI 配置
 
 [![GitHub](https://img.shields.io/badge/GitHub-naliling%2Fastrbot__plugin__ctx__timer-181717?logo=github)](https://github.com/naliling/astrbot_plugin_ctx_timer)
-[![Version](https://img.shields.io/badge/version-1.0.1.6-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.1.7-38bdf8)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/naliling/astrbot_plugin_ctx_timer/blob/main/LICENSE)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A54.5.7-ff6b6b)](https://astrbot.app)
 
@@ -298,7 +298,7 @@ ctx test 1         预览这条规则会往上下文里塞什么
 
 ```
 AstrBot 版本：
-插件版本：1.0.1.6
+插件版本：1.0.1.7
 平台（QQ/Telegram/...）：
 复现步骤：
 完整指令：
@@ -326,7 +326,7 @@ AstrBot 版本：
 **版本规则**：每次更新只递增最后一位 `+0.0.0.1`
 
 ```
-1.0.1.6 → 1.0.1.7 → … → 1.0.1.10 → 1.0.1.11 → …
+1.0.1.7 → 1.0.1.8 → … → 1.0.1.10 → 1.0.1.11 → …
 ```
 
 **更新方式**：WebUI 插件页点「检查更新」，或删掉旧文件夹重新放新的（规则数据不会丢，存在 data 目录）。
