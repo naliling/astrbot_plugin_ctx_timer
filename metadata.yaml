@@ -9,7 +9,7 @@ desc: >
   · 纯指令管理：添加 / 查看 / 修改 / 开关 / 删除
 
   装上是空的，你不写规则它就不动。
-version: 1.0.1.8
+version: 1.1.8
 author: 娜莉灵
 repo: https://github.com/naliling/astrbot_plugin_ctx_timer
 support_platforms:

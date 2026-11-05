@@ -5,7 +5,12 @@
 
 ---
 
-## 1.0.1.8 - 2026-11-05
+## 1.1.8 - 2026-11-05
+
+### 改动
+- 版本号按你的要求从 1.0.1.8 改为 1.1.8（跳到 1.1.x）
+- metadata.yaml 的 tags 挪到文件末尾，和 humanoid_core、autonomous_social 等插件的写法完全一致
+- 标签内容：上下文注入 / 规则定时 / 娜莉灵
 
 ### 改动
 - metadata.yaml 的 tags 挪到文件末尾，和 humanoid_core、autonomous_social 等插件的写法完全一致（tags 放在 support_platforms、astrbot_version 之后）
