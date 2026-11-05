@@ -5,6 +5,14 @@
 
 ---
 
+## 1.0.1.8 - 2026-11-05
+
+### 改动
+- metadata.yaml 的 tags 挪到文件末尾，和 humanoid_core、autonomous_social 等插件的写法完全一致（tags 放在 support_platforms、astrbot_version 之后）
+- 标签内容不变：上下文注入 / 规则定时 / 娜莉灵
+
+---
+
 ## 1.0.1.7 - 2026-11-05
 
 ### 改动

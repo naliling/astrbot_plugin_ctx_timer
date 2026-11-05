@@ -9,13 +9,9 @@ desc: >
   · 纯指令管理：添加 / 查看 / 修改 / 开关 / 删除
 
   装上是空的，你不写规则它就不动。
-version: 1.0.1.7
+version: 1.0.1.8
 author: 娜莉灵
 repo: https://github.com/naliling/astrbot_plugin_ctx_timer
-tags:
-  - 上下文注入
-  - 规则定时
-  - 娜莉灵
 support_platforms:
   - aiocqhttp
   - qq_official
@@ -35,3 +31,7 @@ support_platforms:
   - mattermost
   - vocechat
 astrbot_version: ">=4.5.7"
+tags:
+  - 上下文注入
+  - 规则定时
+  - 娜莉灵
